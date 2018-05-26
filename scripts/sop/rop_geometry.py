@@ -1,0 +1,1 @@
+kwargs['node'].parm('sopoutput').set('`jia_mpc_cache()`')
