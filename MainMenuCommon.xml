@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mainMenu>
+    <menuBar>
+        <subMenu id="file_menu">
+            <scriptItem id="h.mypref">
+		<insertBefore>h.save_as</insertBefore>
+                    <label>MPC Save</label>
+                    <scriptPath>$HOME/houdini16.5/scripts/mpc_save.py</scriptPath>
+            </scriptItem>
+        </subMenu>
+    </menuBar>
+</mainMenu>
