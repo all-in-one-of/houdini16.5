@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <toolshelf name="Oliver" label="Oliver">
+    <memberTool name="setrest0"/>
+    <memberTool name="tool_7"/>
+  </toolshelf>
+
+  <tool name="setrest0" label="SET REST" icon="PLASMA_App">
+    <toolMenuContext name="network">
+      <contextNetType>SOP</contextNetType>
+    </toolMenuContext>
+    <script scriptType="python"><![CDATA[###code###
+code = '''
+int n[] = neighbours(0,0);
+//----
+
+vector zeroP = point(0,"P",0);
+vector oneP = point(0,"P",n[0]);
+vector twoP = point(0,"P",n[1]);
+vector threeP = point(0,"P",n[2]);
+//---
+vector xaxis = zeroP-oneP;
+vector yaxis = zeroP-twoP;
+vector zaxis = zeroP-threeP;
+
+
+matrix3 xform_xy=set(xaxis,yaxis,zaxis);
+matrix3 xform_yz=set(yaxis,xaxis,zaxis);
+matrix3 xform_zx=set(zaxis,xaxis,yaxis);
+
+matrix3 temp;
+int sw=chi("orientaion");
+if(sw==0)
+{
+    temp=xform_xy;
+}
+if(sw==1)
+{
+    temp=xform_yz;
+}
+if(sw==2)
+{
+    temp=xform_zx;
+}
+//---
+
+int trs=0,xyz=0,c=1;
+vector pivot=set(0,0,0);
+v@rot = cracktransform(trs,xyz,c,pivot,temp);
+
+'''
+######
+
+
+parm = '''{\n    name\tparameters\n    parm {\n        name    "orientaion"\n        label   "Orientaion"\n        type    ordinal\n        default { "0" }\n        menu {\n            "0" "xy"\n            "1" "yz"\n            "2" "zx"\n        }\n    }\n    group {\n        name    "folder1"\n        label   "Code"\n\n        parm {\n            name    "group"\n            baseparm\n            label   "Group"\n            invisible\n            export  none\n        }\n        parm {\n            name    "grouptype"\n            baseparm\n            label   "Group Type"\n            invisible\n            export  none\n        }\n        parm {\n            name    "class"\n            baseparm\n            label   "Run Over"\n            invisible\n            export  none\n        }\n        parm {\n            name    "vex_numcount"\n            baseparm\n            label   "Number Count"\n            export  none\n        }\n        parm {\n            name    "vex_threadjobsize"\n            baseparm\n            label   "Thread Job Size"\n            export  none\n        }\n        parm {\n            name    "snippet"\n            baseparm\n            label   "VEXpression"\n            export  all\n        }\n        parm {\n            name    "exportlist"\n            baseparm\n            label   "Attributes to Create"\n            invisible\n            export  none\n        }\n        parm {\n            name    "vex_strict"\n            baseparm\n            label   "Enforce Prototypes"\n            invisible\n            export  none\n        }\n    }\n\n    group {\n        name    "folder1_1"\n        label   "Bindings"\n        invisibletab\n\n        parm {\n            name    "autobind"\n            baseparm\n            label   "Autobind by Name"\n            export  none\n        }\n        multiparm {\n            name    "bindings"\n            label    "Number of Bindings"\n            baseparm\n            default 0\n            parmtag { "autoscope" "0000000000000000" }\n            parmtag { "multistartoffset" "1" }\n\n        }\n\n        parm {\n            name    "groupautobind"\n            baseparm\n            label   "Autobind Groups by Name"\n            export  none\n        }\n        multiparm {\n            name    "groupbindings"\n            label    "Group Bindings"\n            baseparm\n            default 0\n            parmtag { "autoscope" "0000000000000000" }\n            parmtag { "multistartoffset" "1" }\n\n        }\n\n        parm {\n            name    "vex_cwdpath"\n            baseparm\n            label   "Evaluation Node Path"\n            export  none\n        }\n        parm {\n            name    "vex_outputmask"\n            baseparm\n            label   "Export Parameters"\n            export  none\n        }\n        parm {\n            name    "vex_updatenmls"\n            baseparm\n            label   "Update Normals If Displaced"\n            export  none\n        }\n        parm {\n            name    "vex_matchattrib"\n            baseparm\n            label   "Attribute to Match"\n            export  none\n        }\n        parm {\n            name    "vex_inplace"\n            baseparm\n            label   "Compute Results In Place"\n            export  none\n        }\n        parm {\n            name    "vex_selectiongroup"\n            baseparm\n            label   "Output Selection Group"\n            export  none\n        }\n    }\n\n}\n'''
+
+#####
+
+node = hou.selectedNodes()[0]
+bbx=node.createOutputNode('box')
+bbx.parm('orientedbbox').set(1)
+
+
+ex_xf = bbx.createOutputNode('attribwrangle')
+ex_xf.parm('snippet').set(code)
+parmGroup = ex_xf.parmTemplateGroup()
+
+parmGroup.setToDialogScript(parm)
+ex_xf.setParmTemplateGroup(parmGroup)
+
+
+#create xform
+xform = node.createOutputNode('xform')
+xform.parm('rx').setExpression(r'point("{0}",0,"rot",0)'.format(ex_xf.path()))
+xform.parm('ry').setExpression(r'point("{0}",0,"rot",1)'.format(ex_xf.path()))
+xform.parm('rz').setExpression(r'point("{0}",0,"rot",2)'.format(ex_xf.path()))
+xform.parm('invertxform').set('1')
+]]></script>
+  </tool>
+
+  <tool name="tool_7" label="multiple Camera flipbook" icon="PLASMA_App">
+    <script scriptType="python"><![CDATA[import toolutils
+
+
+def mkdir(path):
+    import os
+    path=path.strip()
+    path=path.rstrip("\\")
+    isExists=os.path.exists(path)
+    if not isExists:
+        os.makedirs(path)
+
+
+allcamlist = []
+root = hou.node("/obj")
+for i in root.allSubChildren():
+    if i.type().description() == 'Camera':
+        allcamlist.append(i.path())
+select_cam_list = hou.ui.selectFromList(allcamlist)
+
+##
+startFrame = hou.playbar.playbackRange()[0]
+endFrame = hou.playbar.playbackRange()[1]
+
+for i in range(int(startFrame),int(endFrame+1)):
+    hou.setFrame(i)
+    for j in select_cam_list:
+        camnode = hou.node(allcamlist[j])
+        scene = toolutils.sceneViewer()
+
+        curview = scene.curViewport()
+        camview = curview.setCamera(camnode)
+
+        flipbook_options = scene.flipbookSettings().stash()
+        flipbook_options.cropOutMaskOverlay()
+        flipbook_options.frameRange((i,i))
+        path = "{1}/FLIPBOOK/{0}".format(hou.hipFile.basename().split('.')[0]+'_'+camnode.name(),hou.expandString("$HIP"))
+        mkdir(path)
+        flipbook_options.output(path+'/{0}.$F4.jpg'.format(hou.hipFile.basename().split('.')[0]+'_'+camnode.name()))
+
+        scene.flipbook(camview,flipbook_options)]]></script>
+  </tool>
+</shelfDocument>
